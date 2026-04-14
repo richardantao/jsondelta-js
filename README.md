@@ -310,7 +310,7 @@ collector.on('change',       (state: Partial<T>) => void)
 collector.on('complete',     (state: T) => void)
 collector.on('pathstart',    (path: string, value: unknown) => void)
 collector.on('pathcomplete', (path: string, value: unknown) => void)
-collector.on('error',        (err: JsonPulseError) => void)
+collector.on('error',        (err: JsonCurrentError) => void)
 ```
 
 ## Emitter API
@@ -328,7 +328,7 @@ emitter.use(fn: MiddlewareFn): this // register middleware — chainable
 
 emitter.on('patch',    (chunk: StreamingChunk) => void)
 emitter.on('complete', () => void)
-emitter.on('error',    (err: JsonPulseError) => void)
+emitter.on('error',    (err: JsonCurrentError) => void)
 ```
 
 ---

@@ -1,7 +1,7 @@
 import { TypedEmitter } from "./base";
 import {
 	type EmitterEvents,
-	JsonPulseError,
+	JsonCurrentError,
 	type StreamingChunk,
 } from "./types";
 
@@ -876,7 +876,7 @@ export class Emitter extends TypedEmitter<EmitterEvents> {
 				: parseInt(raw, 10);
 
 		if (Number.isNaN(value)) {
-			this.emit("error", new JsonPulseError(`Invalid number: "${raw}"`));
+			this.emit("error", new JsonCurrentError(`Invalid number: "${raw}"`));
 			this.valBuf = "";
 			return;
 		}

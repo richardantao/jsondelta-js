@@ -15,7 +15,7 @@ import type { MiddlewareFn, StreamingChunk } from "../types";
 
 export type StreamStatus = "idle" | "streaming" | "complete" | "error";
 
-export interface UseJsonPulseOptions<T> {
+export interface UseJsonCurrentOptions<T> {
 	/**
 	 * Middleware functions applied to every patch before reconstruction.
 	 * Runs in registration order. See MiddlewareFn for the full contract.
@@ -81,7 +81,7 @@ export interface UseJsonPulseOptions<T> {
 	onError?: (err: Error) => void;
 }
 
-export interface UseJsonPulseReturn<T> {
+export interface UseJsonCurrentReturn<T> {
 	/**
 	 * The current partially-assembled state. Updated on every patch.
 	 * `undefined` until the first patch arrives.
@@ -172,8 +172,8 @@ export interface UseJsonPulseReturn<T> {
  * ```
  */
 export function useJsonCurrent<T = unknown>(
-	options: UseJsonPulseOptions<T> = {},
-): UseJsonPulseReturn<T> {
+	options: UseJsonCurrentOptions<T> = {},
+): UseJsonCurrentReturn<T> {
 	const [data, setData] = useState<Partial<T>>({});
 	const [status, setStatus] = useState<StreamStatus>("idle");
 

@@ -96,21 +96,21 @@ export interface CollectorEvents<T> {
 	 */
 	pathcomplete: (path: string, value: unknown) => void;
 
-	error: (err: JsonPulseError) => void;
+	error: (err: JsonCurrentError) => void;
 }
 
 /** Events the Emitter can emit. */
 export interface EmitterEvents {
 	patch: (chunk: StreamingChunk) => void;
 	complete: () => void;
-	error: (err: JsonPulseError) => void;
+	error: (err: JsonCurrentError) => void;
 }
 
-export class JsonPulseError extends Error {
+export class JsonCurrentError extends Error {
 	readonly cause?: unknown;
 	constructor(message: string, cause?: unknown) {
 		super(message);
-		this.name = "JsonPulseError";
+		this.name = "JsonCurrentError";
 		this.cause = cause;
 	}
 }

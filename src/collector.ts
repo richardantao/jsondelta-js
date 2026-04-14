@@ -2,7 +2,7 @@ import { TypedEmitter } from "./base";
 import { getPath, setPath } from "./path";
 import {
 	type CollectorEvents,
-	JsonPulseError,
+	JsonCurrentError,
 	type MiddlewareFn,
 	type StreamingChunk,
 } from "./types";
@@ -70,7 +70,7 @@ export class Collector<T = unknown> extends TypedEmitter<CollectorEvents<T>> {
 	 */
 	consume(chunk: StreamingChunk): void {
 		if (this._isComplete) {
-			throw new JsonPulseError(
+			throw new JsonCurrentError(
 				"Cannot consume patches after complete() has been called. Call reset() to reuse this Collector.",
 			);
 		}
@@ -162,14 +162,17 @@ export class Collector<T = unknown> extends TypedEmitter<CollectorEvents<T>> {
 					break;
 				}
 				default: {
-					throw new JsonPulseError(`Unknown op "${op}" at path "${path}"`);
+					throw new JsonCurrentError(`Unknown op "${op}" at path "${path}"`);
 				}
 			}
 		} catch (err) {
 			const error =
-				err instanceof JsonPulseError
+				err instanceof JsonCurrentError
 					? err
-					: new JsonPulseError(`Failed to apply patch at path "${path}"`, err);
+					: new JsonCurrentError(
+							`Failed to apply patch at path "${path}"`,
+							err,
+						);
 			this.emit("error", error);
 			return;
 		}
