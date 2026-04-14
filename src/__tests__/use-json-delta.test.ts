@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { useJsonDelta } from "../react";
+import { useJsonPulse } from "../react";
 import type { StreamingChunk } from "../types";
 
 // ---------------------------------------------------------------------------
@@ -18,21 +18,21 @@ const patch = (
 // Basic state management
 // ---------------------------------------------------------------------------
 
-describe("useJsonDelta — status transitions", () => {
+describe("useJsonPulse — status transitions", () => {
 	it("starts idle", () => {
-		const { result } = renderHook(() => useJsonDelta());
+		const { result } = renderHook(() => useJsonPulse());
 		expect(result.current.status).toBe("idle");
 		expect(result.current.data).toEqual({});
 	});
 
 	it("transitions to streaming on first consume", () => {
-		const { result } = renderHook(() => useJsonDelta());
+		const { result } = renderHook(() => useJsonPulse());
 		act(() => result.current.consume(patch("title", "Hello")));
 		expect(result.current.status).toBe("streaming");
 	});
 
 	it("transitions to complete when complete() is called", () => {
-		const { result } = renderHook(() => useJsonDelta());
+		const { result } = renderHook(() => useJsonPulse());
 		act(() => {
 			result.current.consume(patch("title", "Hello"));
 			result.current.complete();
@@ -41,7 +41,7 @@ describe("useJsonDelta — status transitions", () => {
 	});
 
 	it("resets back to idle", () => {
-		const { result } = renderHook(() => useJsonDelta());
+		const { result } = renderHook(() => useJsonPulse());
 		act(() => {
 			result.current.consume(patch("title", "Hello"));
 			result.current.complete();
@@ -56,15 +56,15 @@ describe("useJsonDelta — status transitions", () => {
 // Data assembly
 // ---------------------------------------------------------------------------
 
-describe("useJsonDelta — data assembly", () => {
+describe("useJsonPulse — data assembly", () => {
 	it("assembles patches into data", () => {
-		const { result } = renderHook(() => useJsonDelta<{ title: string }>());
+		const { result } = renderHook(() => useJsonPulse<{ title: string }>());
 		act(() => result.current.consume(patch("title", "Hello")));
 		expect(result.current.data.title).toBe("Hello");
 	});
 
 	it("appends string deltas", () => {
-		const { result } = renderHook(() => useJsonDelta<{ title: string }>());
+		const { result } = renderHook(() => useJsonPulse<{ title: string }>());
 		act(() => {
 			result.current.consume(patch("title", "Hel", "add"));
 			result.current.consume(patch("title", "lo", "append"));
@@ -74,7 +74,7 @@ describe("useJsonDelta — data assembly", () => {
 
 	it("assembles nested paths", () => {
 		const { result } = renderHook(() =>
-			useJsonDelta<{ cards: { term: string }[] }>(),
+			useJsonPulse<{ cards: { term: string }[] }>(),
 		);
 		act(() => {
 			result.current.consume(patch("cards", [], "add"));
@@ -85,7 +85,7 @@ describe("useJsonDelta — data assembly", () => {
 	});
 
 	it("each change produces a new data reference for React diffing", () => {
-		const { result } = renderHook(() => useJsonDelta<{ n: number }>());
+		const { result } = renderHook(() => useJsonPulse<{ n: number }>());
 		const refs: object[] = [];
 
 		// Capture refs via re-renders
@@ -102,10 +102,10 @@ describe("useJsonDelta — data assembly", () => {
 // Middleware
 // ---------------------------------------------------------------------------
 
-describe("useJsonDelta — middleware", () => {
+describe("useJsonPulse — middleware", () => {
 	it("applies middleware before reconstruction", () => {
 		const { result } = renderHook(() =>
-			useJsonDelta<{ title: string }>({
+			useJsonPulse<{ title: string }>({
 				middleware: [
 					(patch, next) =>
 						next({ ...patch, value: (patch.value as string).toUpperCase() }),
@@ -118,7 +118,7 @@ describe("useJsonDelta — middleware", () => {
 
 	it("can drop patches via middleware", () => {
 		const { result } = renderHook(() =>
-			useJsonDelta<{ title: string; secret: string }>({
+			useJsonPulse<{ title: string; secret: string }>({
 				// Drop any patch at path 'secret'
 				middleware: [
 					(p, next) => {
@@ -139,7 +139,7 @@ describe("useJsonDelta — middleware", () => {
 
 	it("can fan out a patch to mirror a field", () => {
 		const { result } = renderHook(() =>
-			useJsonDelta<{ cards: { term: string; originalTerm: string }[] }>({
+			useJsonPulse<{ cards: { term: string; originalTerm: string }[] }>({
 				middleware: [
 					(p, next) => {
 						next(p);
@@ -164,11 +164,11 @@ describe("useJsonDelta — middleware", () => {
 // Callbacks
 // ---------------------------------------------------------------------------
 
-describe("useJsonDelta — callbacks", () => {
+describe("useJsonPulse — callbacks", () => {
 	it("calls onChange with the latest partial state on each patch", () => {
 		const onChange = vi.fn();
 		const { result } = renderHook(() =>
-			useJsonDelta<{ title: string }>({ onChange }),
+			useJsonPulse<{ title: string }>({ onChange }),
 		);
 
 		act(() => {
@@ -185,7 +185,7 @@ describe("useJsonDelta — callbacks", () => {
 	it("calls onComplete with final state", () => {
 		const onComplete = vi.fn();
 		const { result } = renderHook(() =>
-			useJsonDelta<{ title: string }>({ onComplete }),
+			useJsonPulse<{ title: string }>({ onComplete }),
 		);
 		act(() => {
 			result.current.consume(patch("title", "Hello"));
@@ -200,7 +200,7 @@ describe("useJsonDelta — callbacks", () => {
 	it("does not call onComplete if complete() never called", () => {
 		const onComplete = vi.fn();
 		const { result } = renderHook(() =>
-			useJsonDelta<{ title: string }>({ onComplete }),
+			useJsonPulse<{ title: string }>({ onComplete }),
 		);
 		act(() => result.current.consume(patch("title", "Hello")));
 		expect(onComplete).not.toHaveBeenCalled();
@@ -208,7 +208,7 @@ describe("useJsonDelta — callbacks", () => {
 
 	it("sets status to error when consume throws after complete", () => {
 		const onError = vi.fn();
-		const { result } = renderHook(() => useJsonDelta({ onError }));
+		const { result } = renderHook(() => useJsonPulse({ onError }));
 		act(() => {
 			result.current.consume(patch("x", 1));
 			result.current.complete();
@@ -224,11 +224,11 @@ describe("useJsonDelta — callbacks", () => {
 // pathcomplete
 // ---------------------------------------------------------------------------
 
-describe("useJsonDelta — pathstart", () => {
+describe("useJsonPulse — pathstart", () => {
 	it("calls onPathStart the first time a path receives a patch", () => {
 		const onPathStart = vi.fn();
 		const { result } = renderHook(() =>
-			useJsonDelta<{ title: string }>({ onPathStart }),
+			useJsonPulse<{ title: string }>({ onPathStart }),
 		);
 		act(() => {
 			result.current.consume(patch("title", "Hello", "add"));
@@ -240,7 +240,7 @@ describe("useJsonDelta — pathstart", () => {
 	it("does not call onPathStart on append — only on first add", () => {
 		const onPathStart = vi.fn();
 		const { result } = renderHook(() =>
-			useJsonDelta<{ title: string }>({ onPathStart }),
+			useJsonPulse<{ title: string }>({ onPathStart }),
 		);
 		act(() => {
 			result.current.consume(patch("title", "Hel", "add"));
@@ -253,7 +253,7 @@ describe("useJsonDelta — pathstart", () => {
 	it("fires before pathcomplete for the same path", () => {
 		const events: string[] = [];
 		const { result } = renderHook(() =>
-			useJsonDelta<{ title: string }>({
+			useJsonPulse<{ title: string }>({
 				onPathStart: (path) => events.push(`start:${path}`),
 				onPathComplete: (path) => events.push(`complete:${path}`),
 			}),
@@ -274,7 +274,7 @@ describe("useJsonDelta — pathstart", () => {
 	it("resets seen paths on reset()", () => {
 		const onPathStart = vi.fn();
 		const { result } = renderHook(() =>
-			useJsonDelta<{ title: string }>({ onPathStart }),
+			useJsonPulse<{ title: string }>({ onPathStart }),
 		);
 		act(() => {
 			result.current.consume(patch("title", "Hello", "add"));
@@ -291,7 +291,7 @@ describe("useJsonDelta — pathstart", () => {
 	it("pathstart value is a snapshot not a live reference", () => {
 		const snapshots: unknown[] = [];
 		const { result } = renderHook(() =>
-			useJsonDelta<{ card: { term: string } }>({
+			useJsonPulse<{ card: { term: string } }>({
 				onPathStart: (path, value) => {
 					if (path === "card") snapshots.push(value);
 				},
@@ -306,11 +306,11 @@ describe("useJsonDelta — pathstart", () => {
 	});
 });
 
-describe("useJsonDelta — pathcomplete", () => {
+describe("useJsonPulse — pathcomplete", () => {
 	it("calls onPathComplete when a primitive path is sealed", () => {
 		const onPathComplete = vi.fn();
 		const { result } = renderHook(() =>
-			useJsonDelta<{ title: string }>({ onPathComplete }),
+			useJsonPulse<{ title: string }>({ onPathComplete }),
 		);
 		act(() => {
 			result.current.consume(patch("title", "Hello", "add"));
@@ -322,7 +322,7 @@ describe("useJsonDelta — pathcomplete", () => {
 	it("calls onPathComplete for nested paths in order", () => {
 		const calls: string[] = [];
 		const { result } = renderHook(() =>
-			useJsonDelta<{ cards: { term: string }[] }>({
+			useJsonPulse<{ cards: { term: string }[] }>({
 				onPathComplete: (path) => calls.push(path),
 			}),
 		);
@@ -353,7 +353,7 @@ describe("useJsonDelta — pathcomplete", () => {
 	});
 
 	it("does not mutate data state on complete patches", () => {
-		const { result } = renderHook(() => useJsonDelta<{ title: string }>());
+		const { result } = renderHook(() => useJsonPulse<{ title: string }>());
 		act(() => {
 			result.current.consume(patch("title", "Hello", "add"));
 		});
@@ -369,7 +369,7 @@ describe("useJsonDelta — pathcomplete", () => {
 	it("consumer can filter by path pattern", () => {
 		const cardCompletions: unknown[] = [];
 		const { result } = renderHook(() =>
-			useJsonDelta<{ cards: { term: string }[] }>({
+			useJsonPulse<{ cards: { term: string }[] }>({
 				onPathComplete: (path, value) => {
 					if (/^cards\[\d+\]$/.test(path)) cardCompletions.push(value);
 				},
@@ -397,7 +397,7 @@ describe("useJsonDelta — pathcomplete", () => {
 	it("complete patches pass through middleware", () => {
 		const seen: string[] = [];
 		const { result } = renderHook(() =>
-			useJsonDelta<{ title: string }>({
+			useJsonPulse<{ title: string }>({
 				middleware: [
 					(p, next) => {
 						seen.push(`${p.op}:${p.path}`);
@@ -423,9 +423,9 @@ describe("useJsonDelta — pathcomplete", () => {
 // Reset and reuse
 // ---------------------------------------------------------------------------
 
-describe("useJsonDelta — reset and reuse", () => {
+describe("useJsonPulse — reset and reuse", () => {
 	it("can be reused after reset", () => {
-		const { result } = renderHook(() => useJsonDelta<{ n: number }>());
+		const { result } = renderHook(() => useJsonPulse<{ n: number }>());
 
 		act(() => {
 			result.current.consume(patch("n", 1));
@@ -448,7 +448,7 @@ describe("useJsonDelta — reset and reuse", () => {
 
 	it("complete() is idempotent", () => {
 		const onComplete = vi.fn();
-		const { result } = renderHook(() => useJsonDelta({ onComplete }));
+		const { result } = renderHook(() => useJsonPulse({ onComplete }));
 		act(() => {
 			result.current.consume(patch("x", 1));
 			result.current.complete();
@@ -462,10 +462,10 @@ describe("useJsonDelta — reset and reuse", () => {
 // Realistic streaming simulation
 // ---------------------------------------------------------------------------
 
-describe("useJsonDelta — streaming simulation", () => {
+describe("useJsonPulse — streaming simulation", () => {
 	it("assembles a flashcard set from a realistic patch sequence", () => {
 		const { result } = renderHook(() =>
-			useJsonDelta<{
+			useJsonPulse<{
 				title: string;
 				cards: { term: string; definition: { text: string } }[];
 			}>(),

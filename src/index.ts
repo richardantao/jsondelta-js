@@ -7,4 +7,4 @@ export type {
 	Op,
 	StreamingChunk,
 } from "./types";
-export { JsonDeltaError } from "./types";
+export { JsonPulseError } from "./types";

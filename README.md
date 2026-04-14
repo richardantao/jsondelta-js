@@ -1,4 +1,4 @@
-# jsondelta
+# jsonpulse
 
 Stream structured JSON from an LLM to your client — incrementally, as it generates.
 
@@ -12,13 +12,13 @@ LLM tokens → [Emitter] → patch stream → [Collector] → assembled object
 
 LLMs generate JSON token by token. If you wait for the complete response before showing anything, users stare at a spinner for seconds. But if you try to parse incomplete JSON — `{"title": "Quarterly Re`, `{"sections": [{"heading": "Ex` — standard parsers throw.
 
-jsondelta solves this with a streaming patch protocol. The Emitter on your server parses raw LLM tokens as they arrive and converts them into structured patch operations. Each patch is a small JSON object describing exactly what changed. The Collector on your client applies those patches incrementally, giving you a live partially-assembled object you can render immediately.
+jsonpulse solves this with a streaming patch protocol. The Emitter on your server parses raw LLM tokens as they arrive and converts them into structured patch operations. Each patch is a small JSON object describing exactly what changed. The Collector on your client applies those patches incrementally, giving you a live partially-assembled object you can render immediately.
 
 ```
 // What the LLM emits (incomplete, unparseable mid-stream):
 {"title": "Quarterly Report", "sections": [{"heading": "Exec
 
-// What jsondelta delivers to your client as it arrives:
+// What jsonpulse delivers to your client as it arrives:
 { path: 'title',               value: 'Quarterly Report', op: 'add'    }
 { path: 'sections',            value: [],                 op: 'add'    }
 { path: 'sections[0]',         value: {},                 op: 'add'    }
@@ -56,7 +56,7 @@ LLM tokens → [Emitter + middleware] → resolved patch stream → [Collector] 
 
 ## How tokens stream
 
-Understanding how jsondelta handles different JSON types helps you reason about what your client receives mid-stream.
+Understanding how jsonpulse handles different JSON types helps you reason about what your client receives mid-stream.
 
 **Strings** stream incrementally — each token's worth of characters arrives as a patch. The first patch is `op: 'add'` (initialises the field), subsequent patches are `op: 'append'` (concatenates). Your UI can show text appearing character by character, or debounce to taste.
 
@@ -93,7 +93,7 @@ Four operations. This is the entire protocol.
 | `insert`   | Push a new element onto an array             | `{ path: 'tags', value: 'urgent', op: 'insert' }`         |
 | `complete` | The value at this path is fully assembled    | `{ path: 'title', value: 'Hello World', op: 'complete' }` |
 
-**Patches are plain JSON-serialisable objects.** jsondelta emits them on the server and expects to receive them on the client — how they travel is entirely up to you. The examples use SSE, but WebSocket, HTTP streaming, or any transport that carries text works identically. jsondelta has no opinion on framing, authentication, compression, or connection management.
+**Patches are plain JSON-serialisable objects.** jsonpulse emits them on the server and expects to receive them on the client — how they travel is entirely up to you. The examples use SSE, but WebSocket, HTTP streaming, or any transport that carries text works identically. jsonpulse has no opinion on framing, authentication, compression, or connection management.
 
 `append` has no equivalent in JSON Patch (RFC 6902). It exists specifically for incremental string streaming.
 
@@ -125,7 +125,7 @@ pathcomplete → value is sealed, stable snapshot delivered
 ## Installation
 
 ```bash
-npm install jsondelta
+npm install jsonpulse
 ```
 
 If you use the React hook entrypoint, install React 19 or newer as well:
@@ -134,16 +134,16 @@ If you use the React hook entrypoint, install React 19 or newer as well:
 npm install react@^19
 ```
 
-`react` is an optional peer dependency and is only required for `jsondelta/react`.
+`react` is an optional peer dependency and is only required for `jsonpulse/react`.
 
-For the Python implementation, see [jsondelta-py](https://github.com/richardantao/jsondelta-py).
+For the Python implementation, see [jsonpulse-py](https://github.com/richardantao/jsonpulse-py).
 
 ---
 
 ## Node server (Emitter)
 
 ```typescript
-import { Emitter } from 'jsondelta';
+import { Emitter } from 'jsonpulse';
 import Anthropic from '@anthropic-ai/sdk';
 
 const client = new Anthropic();
@@ -194,7 +194,7 @@ const emitter = new Emitter({ completions: false });
 The Collector is transport-agnostic. `consume()` expects a `StreamingChunk` object — deserialise from your transport before calling it.
 
 ```typescript
-import { Collector } from 'jsondelta';
+import { Collector } from 'jsonpulse';
 
 const collector = new Collector<ReportDocument>();
 
@@ -258,10 +258,10 @@ Middleware runs in registration order. Call `next(patch)` to pass through, `next
 ## React hook
 
 ```typescript
-import { useJsonDelta } from 'jsondelta/react';
+import { useJsonPulse } from 'jsonpulse/react';
 
 function ReportGenerator({ documentId }: { documentId: string }) {
-  const { data, status, consume, complete, reset } = useJsonDelta<ReportDocument>({
+  const { data, status, consume, complete, reset } = useJsonPulse<ReportDocument>({
     onPathStart: (path) => {
       if (/^sections\[\d+\]$/.test(path)) showSkeleton(path);
     },
@@ -310,7 +310,7 @@ collector.on('change',       (state: Partial<T>) => void)
 collector.on('complete',     (state: T) => void)
 collector.on('pathstart',    (path: string, value: unknown) => void)
 collector.on('pathcomplete', (path: string, value: unknown) => void)
-collector.on('error',        (err: JsonDeltaError) => void)
+collector.on('error',        (err: JsonPulseError) => void)
 ```
 
 ## Emitter API
@@ -328,7 +328,7 @@ emitter.use(fn: MiddlewareFn): this // register middleware — chainable
 
 emitter.on('patch',    (chunk: StreamingChunk) => void)
 emitter.on('complete', () => void)
-emitter.on('error',    (err: JsonDeltaError) => void)
+emitter.on('error',    (err: JsonPulseError) => void)
 ```
 
 ---
@@ -336,7 +336,7 @@ emitter.on('error',    (err: JsonDeltaError) => void)
 ## React hook API
 
 ```typescript
-const { data, status, consume, complete, reset } = useJsonDelta<T>({
+const { data, status, consume, complete, reset } = useJsonPulse<T>({
   middleware?:     MiddlewareFn[];
   onPathStart?:    (path: string, value: unknown) => void;
   onPathComplete?: (path: string, value: unknown) => void;

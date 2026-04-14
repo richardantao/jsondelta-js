@@ -15,7 +15,7 @@ import type { MiddlewareFn, StreamingChunk } from "../types";
 
 export type StreamStatus = "idle" | "streaming" | "complete" | "error";
 
-export interface UseJsonDeltaOptions<T> {
+export interface UseJsonPulseOptions<T> {
 	/**
 	 * Middleware functions applied to every patch before reconstruction.
 	 * Runs in registration order. See MiddlewareFn for the full contract.
@@ -81,7 +81,7 @@ export interface UseJsonDeltaOptions<T> {
 	onError?: (err: Error) => void;
 }
 
-export interface UseJsonDeltaReturn<T> {
+export interface UseJsonPulseReturn<T> {
 	/**
 	 * The current partially-assembled state. Updated on every patch.
 	 * `undefined` until the first patch arrives.
@@ -122,7 +122,7 @@ export interface UseJsonDeltaReturn<T> {
 // ---------------------------------------------------------------------------
 
 /**
- * React hook for consuming a jsondelta patch stream.
+ * React hook for consuming a jsonpulse patch stream.
  *
  * Wraps a Collector instance, exposing `consume` and `complete` for your
  * transport layer to call, and `data`/`status` for your component to render.
@@ -132,7 +132,7 @@ export interface UseJsonDeltaReturn<T> {
  * @example Basic SSE usage
  * ```tsx
  * function ReportGenerator({ documentId }: { documentId: string }) {
- *   const { data, status, consume, complete, reset } = useJsonDelta<ReportDocument>();
+ *   const { data, status, consume, complete, reset } = useJsonPulse<ReportDocument>();
  *
  *   useEffect(() => {
  *     reset();
@@ -157,7 +157,7 @@ export interface UseJsonDeltaReturn<T> {
  *
  * @example With middleware
  * ```tsx
- * const { data, consume, complete } = useJsonDelta<ReportDocument>({
+ * const { data, consume, complete } = useJsonPulse<ReportDocument>({
  *   middleware: [
  *     // Mirror summary → originalSummary as it streams
  *     (patch, next) => {
@@ -171,9 +171,9 @@ export interface UseJsonDeltaReturn<T> {
  * });
  * ```
  */
-export function useJsonDelta<T = unknown>(
-	options: UseJsonDeltaOptions<T> = {},
-): UseJsonDeltaReturn<T> {
+export function useJsonPulse<T = unknown>(
+	options: UseJsonPulseOptions<T> = {},
+): UseJsonPulseReturn<T> {
 	const [data, setData] = useState<Partial<T>>({});
 	const [status, setStatus] = useState<StreamStatus>("idle");
 

@@ -34,7 +34,7 @@ Initial release.
 
 ### React hook
 
-- `useJsonDelta<T>()` wrapping a Collector instance
+- `useJsonPulse<T>()` wrapping a Collector instance
 - `onPathStart`, `onPathComplete`, `onComplete`, `onError` callbacks as stable refs
 - `status`: `'idle' | 'streaming' | 'complete' | 'error'`
 - `consume`, `complete`, `reset` for transport wiring

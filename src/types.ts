@@ -52,7 +52,7 @@ export interface StreamingChunk {
  */
 export type MiddlewareFn = (
 	patch: StreamingChunk,
-	next: (patch: StreamingChunk) => void
+	next: (patch: StreamingChunk) => void,
 ) => void;
 
 /** Events the Collector can emit. */
@@ -96,21 +96,21 @@ export interface CollectorEvents<T> {
 	 */
 	pathcomplete: (path: string, value: unknown) => void;
 
-	error: (err: JsonDeltaError) => void;
+	error: (err: JsonPulseError) => void;
 }
 
 /** Events the Emitter can emit. */
 export interface EmitterEvents {
 	patch: (chunk: StreamingChunk) => void;
 	complete: () => void;
-	error: (err: JsonDeltaError) => void;
+	error: (err: JsonPulseError) => void;
 }
 
-export class JsonDeltaError extends Error {
+export class JsonPulseError extends Error {
 	readonly cause?: unknown;
 	constructor(message: string, cause?: unknown) {
 		super(message);
-		this.name = "JsonDeltaError";
+		this.name = "JsonPulseError";
 		this.cause = cause;
 	}
 }

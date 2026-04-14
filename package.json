@@ -1,10 +1,10 @@
 {
-	"name": "jsondelta",
+	"name": "jsonpulse",
 	"version": "0.1.0",
-	"description": "Transport-agnostic patch protocol for streaming incremental JSON.",
-	"homepage": "https://github.com/richardantao/jsondelta-js#readme",
+	"description": "Parse streamed JSON data incrementally.",
+	"homepage": "https://github.com/richardantao/jsonpulse-js#readme",
 	"bugs": {
-		"url": "https://github.com/richardantao/jsondelta-js/issues"
+		"url": "https://github.com/richardantao/jsonpulse-js/issues"
 	},
 	"type": "module",
 	"exports": {
@@ -21,12 +21,15 @@
 	"types": "./dist/index.d.ts",
 	"files": [
 		"dist",
+		"!dist/**/*.map",
 		"README.md"
 	],
 	"scripts": {
-		"build": "tsc -p tsconfig.build.json",
+		"build": "pnpm build:js && pnpm build:types",
+		"build:js": "tsdown",
+		"build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly",
 		"changeset": "changeset",
-		"dev": "tsc -p tsconfig.build.json --watch",
+		"dev": "tsdown --watch",
 		"prepublishOnly": "pnpm build && pnpm test && pnpm typecheck",
 		"release": "pnpm publish --access public --provenance --no-git-checks",
 		"test": "vitest run",
@@ -44,6 +47,7 @@
 		"jsdom": "^29.0.2",
 		"react": "^19.2.5",
 		"react-dom": "^19.2.5",
+		"tsdown": "^0.12.8",
 		"typescript": "^6.0.2",
 		"vitest": "^4.1.4"
 	},
@@ -67,7 +71,7 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/richardantao/jsondelta-js.git"
+		"url": "git+https://github.com/richardantao/jsonpulse-js.git"
 	},
 	"publishConfig": {
 		"access": "public"
